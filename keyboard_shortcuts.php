@@ -277,70 +277,180 @@ class keyboard_shortcuts extends rcube_plugin
         return "skins/elastic/{$path}";
     }
 
+    /**
+     * Label to show in the help dialog for a shortcut command name.
+     *
+     * Mirrors the labels the built-in sections use, so a key rebound through config is
+     * described by what it now does rather than by what the default binding did.
+     */
+    private function label_for_command(string $command): string
+    {
+        $labels = array(
+            'search'          => 'quicksearch',
+            'help'            => 'help',
+            'select-all'      => 'selectallvisiblemessages',
+            'mark'            => 'markallvisiblemessagesasread',
+            'compose'         => 'compose',
+            'delete'          => 'deletemessage',
+            'forward'         => 'forwardmessage',
+            'reply'           => 'replytomessage',
+            'reply-all'       => 'replytoallmessage',
+            'print'           => 'printmessage',
+            'previouspage'    => 'previouspage',
+            'nextpage'        => 'nextpage',
+            'previousmessage' => 'previousmessage',
+            'nextmessage'     => 'nextmessage',
+            'checkmail'       => 'checkmail',
+            'list'            => 'backtolist',
+            'expand-all'      => 'expand-all',
+            'collapse-all'    => 'collapse-all',
+            'expand-unread'   => 'expand-unread',
+            'plugin.archive'  => 'archive.buttontitle',
+            'archive'         => 'archive.buttontitle',
+        );
+
+        if (isset($labels[$command])) {
+            return $this->translate($labels[$command]);
+        }
+
+        // Unknown command: show it verbatim rather than inventing a translation.
+        return $this->escape($command);
+    }
+
+    /**
+     * Rewrite a section's shortcut rows to reflect configured bindings.
+     *
+     * A configured key replaces a built-in row when it uses the same key. New keys are
+     * additive, matching the dispatcher's behavior: the built-in binding remains active
+     * on its original key.
+     */
+    private function apply_extras_to_section(array $shortcuts, string $scope, bool $append_bindings = true): array
+    {
+        $extras = $this->build_extras_map();
+
+        if (empty($extras[$scope])) {
+            return $shortcuts;
+        }
+
+        $bindings = $extras[$scope];
+
+        $filtered = array();
+        $existing_bindings = array();
+
+        foreach ($shortcuts as $shortcut) {
+            $slug = isset($shortcut['command']) ? $this->command_slug($shortcut['command']) : null;
+            $configured_command = null;
+            $shortcut_key = (string) $shortcut['key'];
+            $lookup_key = array_key_exists($shortcut_key, $bindings) ? $shortcut_key : strtolower($shortcut_key);
+            if (array_key_exists($lookup_key, $bindings)) {
+                $configured_command = $this->command_slug($bindings[$lookup_key]);
+            }
+
+            if ($configured_command !== null && $configured_command !== $slug) {
+                continue; // key now does something else
+            }
+
+            $filtered[] = $shortcut;
+            if ($configured_command !== null && $configured_command === $slug) {
+                $existing_bindings[$shortcut['key']][$configured_command] = true;
+            }
+        }
+
+        if (!$append_bindings) {
+            return $filtered;
+        }
+
+        foreach ($bindings as $key => $command) {
+            $slug = $this->command_slug($command);
+            if (isset($existing_bindings[$key][$slug])) {
+                continue;
+            }
+
+            // Same shape as the built-in rows, so later passes and the renderer treat
+            // them identically.
+            $filtered[] = array(
+                'key' => $key,
+                'command' => $command,
+                'label' => $this->label_for_command($command),
+            );
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * Stable identifier for a command, used to match a configured binding against the
+     * built-in rows. Falls back to the command name itself.
+     */
+    private function command_slug(string $command): string
+    {
+        return strtolower(trim($command));
+    }
+
     private function build_sections(bool $archive_supported, bool $threading_supported): array
     {
         $sections = array();
 
         $mailbox = array(
-            array('key' => '?', 'label' => $this->translate('help')),
-            array('key' => '/', 'label' => $this->translate('quicksearch')),
-            array('key' => 'a', 'label' => $this->translate('selectallvisiblemessages') . ' + ' . $this->translate('markallvisiblemessagesasread')),
-            array('key' => 'c', 'label' => $this->translate('compose')),
-            array('key' => 'd', 'label' => $this->translate('deletemessage')),
+            array('key' => '?', 'command' => 'help', 'label' => $this->translate('help')),
+            array('key' => '/', 'command' => 'search', 'label' => $this->translate('quicksearch')),
+            array('key' => 'a', 'command' => 'select-all', 'label' => $this->translate('selectallvisiblemessages') . ' + ' . $this->translate('markallvisiblemessagesasread')),
+            array('key' => 'c', 'command' => 'compose', 'label' => $this->translate('compose')),
+            array('key' => 'd', 'command' => 'delete', 'label' => $this->translate('deletemessage')),
         );
 
         if ($archive_supported) {
-            $mailbox[] = array('key' => 'z', 'label' => $this->translate('archive.buttontitle'));
+            $mailbox[] = array('key' => 'z', 'command' => 'plugin.archive', 'label' => $this->translate('archive.buttontitle'));
         }
 
         $mailbox = array_merge($mailbox, array(
-            array('key' => 'f', 'label' => $this->translate('forwardmessage')),
-            array('key' => 'j', 'label' => $this->translate('previouspage')),
-            array('key' => 'k', 'label' => $this->translate('nextpage')),
-            array('key' => 'p', 'label' => $this->translate('printmessage')),
-            array('key' => 'r', 'label' => $this->translate('replytomessage')),
-            array('key' => 'R', 'label' => $this->translate('replytoallmessage')),
-            array('key' => 'u', 'label' => $this->translate('checkmail')),
+            array('key' => 'f', 'command' => 'forward', 'label' => $this->translate('forwardmessage')),
+            array('key' => 'j', 'command' => 'previouspage', 'label' => $this->translate('previouspage')),
+            array('key' => 'k', 'command' => 'nextpage', 'label' => $this->translate('nextpage')),
+            array('key' => 'p', 'command' => 'print', 'label' => $this->translate('printmessage')),
+            array('key' => 'r', 'command' => 'reply', 'label' => $this->translate('replytomessage')),
+            array('key' => 'R', 'command' => 'reply-all', 'label' => $this->translate('replytoallmessage')),
+            array('key' => 'u', 'command' => 'checkmail', 'label' => $this->translate('checkmail')),
         ));
 
         $sections[] = array(
             'title' => $this->translate('mailboxview'),
-            'shortcuts' => $mailbox,
+            'shortcuts' => $this->apply_extras_to_section($mailbox, 'mailbox'),
         );
 
         if ($threading_supported) {
             $sections[] = array(
                 'title' => $this->translate('threads'),
-                'shortcuts' => array(
-                    array('key' => 'E', 'label' => $this->translate('expand-all')),
-                    array('key' => 'C', 'label' => $this->translate('collapse-all')),
-                    array('key' => 'U', 'label' => $this->translate('expand-unread')),
-                ),
+                'shortcuts' => $this->apply_extras_to_section(array(
+                    array('key' => 'E', 'command' => 'expand-all', 'label' => $this->translate('expand-all')),
+                    array('key' => 'C', 'command' => 'collapse-all', 'label' => $this->translate('collapse-all')),
+                    array('key' => 'U', 'command' => 'expand-unread', 'label' => $this->translate('expand-unread')),
+                ), 'mailbox', false),
             );
         }
 
         $message_shortcuts = array(
-            array('key' => 'd', 'label' => $this->translate('deletemessage')),
+            array('key' => 'd', 'command' => 'delete', 'label' => $this->translate('deletemessage')),
         );
 
         if ($archive_supported) {
-            $message_shortcuts[] = array('key' => 'z', 'label' => $this->translate('archive.buttontitle'));
+            $message_shortcuts[] = array('key' => 'z', 'command' => 'plugin.archive', 'label' => $this->translate('archive.buttontitle'));
         }
 
         $message_shortcuts = array_merge($message_shortcuts, array(
-            array('key' => 'c', 'label' => $this->translate('compose')),
-            array('key' => 'f', 'label' => $this->translate('forwardmessage')),
-            array('key' => 'i', 'label' => $this->translate('backtolist')),
-            array('key' => 'j', 'label' => $this->translate('previousmessage')),
-            array('key' => 'k', 'label' => $this->translate('nextmessage')),
-            array('key' => 'p', 'label' => $this->translate('printmessage')),
-            array('key' => 'r', 'label' => $this->translate('replytomessage')),
-            array('key' => 'R', 'label' => $this->translate('replytoallmessage')),
+            array('key' => 'c', 'command' => 'compose', 'label' => $this->translate('compose')),
+            array('key' => 'f', 'command' => 'forward', 'label' => $this->translate('forwardmessage')),
+            array('key' => 'i', 'command' => 'list', 'label' => $this->translate('backtolist')),
+            array('key' => 'j', 'command' => 'previousmessage', 'label' => $this->translate('previousmessage')),
+            array('key' => 'k', 'command' => 'nextmessage', 'label' => $this->translate('nextmessage')),
+            array('key' => 'p', 'command' => 'print', 'label' => $this->translate('printmessage')),
+            array('key' => 'r', 'command' => 'reply', 'label' => $this->translate('replytomessage')),
+            array('key' => 'R', 'command' => 'reply-all', 'label' => $this->translate('replytoallmessage')),
         ));
 
         $sections[] = array(
             'title' => $this->translate('messagesdisplaying'),
-            'shortcuts' => $message_shortcuts,
+            'shortcuts' => $this->apply_extras_to_section($message_shortcuts, 'show'),
         );
 
         return $sections;
