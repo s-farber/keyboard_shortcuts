@@ -1,8 +1,8 @@
 {
-  "name": "texxasrulez/keyboard_shortcuts",
+  "name": "s-farber/keyboard_shortcuts",
   "description": "allows some functionality to be handled with the keyboard",
   "license": "GPL-2.0",
-  "homepage": "https://github.com/texxasrulez/keyboard_shortcuts/",
+  "homepage": "https://github.com/s-farber/keyboard_shortcuts/",
   "type": "roundcube-plugin",
 
   "authors": [
@@ -11,10 +11,15 @@
               "email": "texxasrulez@roundcu.be",
               "homepage": "https://www.genesworld.net",
               "role": "Developer"
+          },
+          {
+              "name": "Saul Farber",
+              "homepage": "https://github.com/s-farber",
+              "role": "Maintainer"
           }
       ],
   "support": {
-          "email": "texxasrulez@yahoo.com",
-          "issues": "https://github.com/texxasrulez/keyboard_shortcuts/issues"
+          "issues": "https://github.com/s-farber/keyboard_shortcuts/issues",
+          "source": "https://github.com/s-farber/keyboard_shortcuts"
       }
 }
