@@ -6,6 +6,9 @@ This is a fork of [texxasrulez/keyboard_shortcuts](https://github.com/texxasrule
 It targets Roundcube 1.7 and fixes shortcut dispatch, which was broken on that release, so the plain-letter
 and `?` shortcuts now work. See [Changes in this fork](#changes-in-this-fork).
 
+The original repository is archived and no longer receives updates, so this fork is the maintained copy of the
+plugin. Install from here.
+
 ## Features
 
 - Shortcut help dialog available from the mail toolbar/list controls area
