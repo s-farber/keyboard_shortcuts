@@ -47,6 +47,38 @@ $(function() {
       return false;
     }
 
+    // Down/Up from the search box moves into the results list. Core's list handler
+    // ignores keys whose target is an input (list.js:1472), and Tab only blurs the
+    // list without selecting anything, so there is otherwise no way to reach the
+    // results by keyboard from the search box. Handled before the focus guard below,
+    // which would otherwise skip this plugin entirely while an input is focused.
+    if (e.key == 'ArrowDown' || e.key == 'ArrowUp') {
+      var ks_qsearch = rcmail.gui_objects.qsearchbox;
+      // gui_objects entries are resolved to DOM elements only after load
+      // (app.js:196/241), so compare through the DOM node, not by identity.
+      var ks_focused_el = $("*:focus").get(0);
+      var ks_qsearch_el = ks_qsearch ? $(ks_qsearch).get(0) : null;
+
+      if (ks_qsearch_el && ks_focused_el === ks_qsearch_el && rcmail.message_list) {
+        var ks_rows = rcmail.message_list.rowcount || 0;
+
+        // Only steal focus when the search actually returned something, so an
+        // empty result set leaves the cursor in the box to refine the query.
+        if (ks_rows > 0) {
+          e.preventDefault();
+          rcmail.message_list.focus();
+
+          if (e.key == 'ArrowDown') {
+            rcmail.message_list.select_first(null, true);
+          } else {
+            rcmail.message_list.select_last(null, true);
+          }
+
+          return false;
+        }
+      }
+    }
+
     // check if some element has focus. If it does, skip this plugin.
     if ( $("*:focus").is("textarea, input") ) {
       return true;
