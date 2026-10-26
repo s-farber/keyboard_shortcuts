@@ -24,8 +24,8 @@ This repository is maintained by Gene Hawkins (`texxasrulez`).
 Mailbox view:
 
 - `?` Show shortcut help
-- `a` Select all visible messages
-- `A` Mark all visible messages as read
+- `/` Focus quick search
+- `a` Select all visible messages (also marks them read)
 - `c` Compose
 - `d` Delete
 - `f` Forward
@@ -34,7 +34,6 @@ Mailbox view:
 - `p` Print
 - `r` Reply
 - `R` Reply all
-- `s` Focus quick search
 - `u` Check for new mail
 - `z` Archive, when archive is configured
 
