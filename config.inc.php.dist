@@ -1,9 +1,33 @@
 <?php
 
-// each keyboard shortcut we support needs an entry in this array. 
+// Extra keyboard shortcuts, in addition to the built-in bindings.
+//
+// Each entry binds one character to a Roundcube command name. Configured keys are
+// checked before the built-in table, so an entry here overrides a default binding;
+// keys you do not list keep working as before.
+//
+// Use the Roundcube command names the plugin itself uses, e.g.:
+//   delete, forward, reply-all, print, compose, list, nextpage, previouspage,
+//   nextmessage, previousmessage, checkmail, plugin.archive, expand-all, collapse-all
+//
+// Three equivalent forms:
+//
+//   $config['keyboard_shortcuts_extras'] = array(
+//       'x' => 'delete',                                  // mailbox view
+//       'mailbox' => array('x' => 'delete'),              // explicit scope
+//       's' => array('command' => 'delete', 'scope' => 'both'),
+//   );
+//
+// 'scope' (or the top-level grouping) is one of 'mailbox', 'show', or 'both'.
+// 'mailbox' is the message list; 'show' is an open message. Default scope is 'mailbox'.
+//
+// Example: rebind delete to 'x' and restore the search box to 's':
+//
+//   $config['keyboard_shortcuts_extras'] = array(
+//       'mailbox' => array(
+//           'x' => 'delete',
+//           's' => array('command' => 'search', 'scope' => 'mailbox'),
+//       ),
+//   );
 
-$rcmail_config['keyboard_shortcuts_extras'] = array(
-
-);
-
-?>
+$config['keyboard_shortcuts_extras'] = array();

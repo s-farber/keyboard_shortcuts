@@ -142,9 +142,90 @@ class keyboard_shortcuts extends rcube_plugin
         $content .= '</div>';
 
         $rcmail->output->set_env('ks_functions', array('?' => 'ks_help'));
+        $rcmail->output->set_env('ks_extras', $this->build_extras_map());
         $p['content'] = $content . $p['content'];
 
         return $p;
+    }
+
+    /**
+     * Read $config['keyboard_shortcuts_extras'] and return it as a map the client can use:
+     *
+     *   array( 'mailbox' => array('x' => 'delete', ...), 'show' => array(...) )
+     *
+     * Each entry binds a single character to a Roundcube command name. The client looks up
+     * this map before its built-in switch, so a configured binding overrides the default and
+     * unconfigured keys keep working as before.
+     *
+     * Accepted forms:
+     *   'x' => 'delete'                      mailbox only
+     *   'mailbox' => array('x' => 'delete')  both scopes/
+     *   'x' => array('command' => 'delete', 'scope' => 'mailbox|show|both')
+     */
+    private function build_extras_map(): array
+    {
+        $rcmail = rcmail::get_instance();
+        $raw = $rcmail->config->get('keyboard_shortcuts_extras', array());
+
+        if (!is_array($raw) || empty($raw)) {
+            return array();
+        }
+
+        // A top-level 'mailbox' or 'show' key declares scope, so nesting is allowed.
+        $scoped = (array_key_exists('mailbox', $raw) || array_key_exists('show', $raw));
+        $source = $scoped ? $raw : array('mailbox' => $raw);
+
+        $map = array();
+
+        foreach ($source as $scope => $bindings) {
+            if (!is_array($bindings)) {
+                continue;
+            }
+
+            foreach ($bindings as $key => $definition) {
+                $command = null;
+                $entry_scope = $scope;
+
+                if (is_array($definition)) {
+                    $command = isset($definition['command']) ? (string) $definition['command'] : null;
+                    if (isset($definition['scope'])) {
+                        $entry_scope = (string) $definition['scope'];
+                    }
+                }
+                elseif (is_string($definition)) {
+                    $command = $definition;
+                }
+
+                $key = (string) $key;
+                $command = trim((string) $command);
+
+                // Skip anything unusable rather than letting it reach the client as a no-op.
+                if ($command === '' || $key === '') {
+                    continue;
+                }
+
+                if ($entry_scope === 'both') {
+                    $targets = array('mailbox', 'show');
+                }
+                else {
+                    $targets = array($entry_scope);
+                }
+
+                foreach ($targets as $target) {
+                    if ($target !== 'mailbox' && $target !== 'show') {
+                        continue;
+                    }
+
+                    if (!isset($map[$target])) {
+                        $map[$target] = array();
+                    }
+
+                    $map[$target][$key] = $command;
+                }
+            }
+        }
+
+        return $map;
     }
 
     private function render_help_section(string $title, array $shortcuts): string

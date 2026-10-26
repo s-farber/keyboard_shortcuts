@@ -72,6 +72,19 @@ $(function() {
       // 'a' all mean the 'a' shortcut, which is what the help dialog advertises.
       var ks_lookup = typeof ks_key === 'string' && ks_key.length == 1 ? ks_key.toLowerCase() : ks_key;
 
+      // Deployers can rebind keys from config: $config['keyboard_shortcuts_extras'] is
+      // emitted as rcmail.env.ks_extras and takes precedence over the built-in switch
+      // below. Anything not configured falls through and behaves as before.
+      var ks_extras = (rcmail.env.ks_extras || {}).mailbox || {};
+      var ks_extra_cmd = ks_extras[ks_key] || ks_extras[ks_lookup];
+
+      if (typeof ks_extra_cmd === 'string' && ks_extra_cmd) {
+        // Stop the browser default, or the bound key is also typed into the page.
+        e.preventDefault();
+        rcmail.command(ks_extra_cmd);
+        return false;
+      }
+
       // env.ks_functions is keyed by the literal character ('?' => 'ks_help').
       var ks_function = (rcmail.env.ks_functions || {})[ks_key]
         || (rcmail.env.ks_functions || {})[ks_lookup];
@@ -148,8 +161,19 @@ $(function() {
       // Same reasoning as the mailbox branch: e.which on keydown is the shifted/physical
       // key, so dispatch on the produced character instead.
       var ks_key2 = e.key,
-          ks_lookup2 = typeof ks_key2 === 'string' && ks_key2.length == 1 ? ks_key2.toLowerCase() : ks_key2,
-          ks_function2 = (rcmail.env.ks_functions || {})[ks_key2]
+          ks_lookup2 = typeof ks_key2 === 'string' && ks_key2.length == 1 ? ks_key2.toLowerCase() : ks_key2;
+
+      // Config-supplied bindings take precedence here too; see the mailbox branch.
+      var ks_extras2 = (rcmail.env.ks_extras || {}).show || {};
+      var ks_extra_cmd2 = ks_extras2[ks_key2] || ks_extras2[ks_lookup2];
+
+      if (typeof ks_extra_cmd2 === 'string' && ks_extra_cmd2) {
+        e.preventDefault();
+        rcmail.command(ks_extra_cmd2);
+        return false;
+      }
+
+      var ks_function2 = (rcmail.env.ks_functions || {})[ks_key2]
             || (rcmail.env.ks_functions || {})[ks_lookup2];
 
       if (typeof ks_function2 === 'string' && typeof window[ks_function2] === 'function') {
