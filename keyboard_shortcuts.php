@@ -14,8 +14,7 @@ declare(strict_types=1);
 /**
  * Shortcuts, list view:
  * ?:	Show shortcut help
- * a:	Select all visible messages
- * A:	Mark all as read (as Google Reader)
+ * a:	Select all visible messages (also marks them read)
  * c:	Compose new message
  * d:	Delete message
  * f:	Forward message
@@ -24,7 +23,7 @@ declare(strict_types=1);
  * p:	Print message
  * r:	Reply to message
  * R:	Reply to all of message
- * s:	Jump to quicksearch
+ * /:	Jump to quicksearch
  * u:	Check for new mail (update)
  * z:	Move message to archive
  *
@@ -203,8 +202,8 @@ class keyboard_shortcuts extends rcube_plugin
 
         $mailbox = array(
             array('key' => '?', 'label' => $this->translate('help')),
-            array('key' => 'a', 'label' => $this->translate('selectallvisiblemessages')),
-            array('key' => 'A', 'label' => $this->translate('markallvisiblemessagesasread')),
+            array('key' => '/', 'label' => $this->translate('quicksearch')),
+            array('key' => 'a', 'label' => $this->translate('selectallvisiblemessages') . ' + ' . $this->translate('markallvisiblemessagesasread')),
             array('key' => 'c', 'label' => $this->translate('compose')),
             array('key' => 'd', 'label' => $this->translate('deletemessage')),
         );
@@ -220,7 +219,6 @@ class keyboard_shortcuts extends rcube_plugin
             array('key' => 'p', 'label' => $this->translate('printmessage')),
             array('key' => 'r', 'label' => $this->translate('replytomessage')),
             array('key' => 'R', 'label' => $this->translate('replytoallmessage')),
-            array('key' => 's', 'label' => $this->translate('quicksearch')),
             array('key' => 'u', 'label' => $this->translate('checkmail')),
         ));
 
