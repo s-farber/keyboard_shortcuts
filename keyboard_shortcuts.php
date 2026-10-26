@@ -46,13 +46,13 @@ declare(strict_types=1);
 
 class keyboard_shortcuts extends rcube_plugin
 {
-    const PLUGIN_VERSION = '1.0.2';
+    const PLUGIN_VERSION = '2.5.0';
     const PLUGIN_INFO = array(
         'name' => 'keyboard_shortcuts',
-        'vendor' => 'Gene Hawkins',
+        'vendor' => 'Gene Hawkins, Saul Farber',
         'version' => self::PLUGIN_VERSION,
         'license' => 'GPL-2.0-only',
-        'uri' => 'https://github.com/texxasrulez/keyboard_shortcuts',
+        'uri' => 'https://github.com/s-farber/keyboard_shortcuts',
     );
 
     public static function info(): array
